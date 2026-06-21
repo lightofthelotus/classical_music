@@ -1339,9 +1339,9 @@
 
       // Load MP3s from local audios/tabla/
       const files = [
-        ['dha','/classical_music/practice_studio/audios/tabla/Dha01.mp3'], ['tin','/classical_music/practice_studio/audios/tabla/Tin01.mp3'],
-        ['ta', '/classical_music/practice_studio/audios/tabla/Ta01.mp3'],  ['na', '/classical_music/practice_studio/audios/tabla/Na01.mp3'],
-        ['ge', '/classical_music/practice_studio/audios/tabla/Ge01.mp3']
+        ['dha','/practice_studio/audios/tabla/Dha01.mp3'], ['tin','/practice_studio/audios/tabla/Tin01.mp3'],
+        ['ta', '/practice_studio/audios/tabla/Ta01.mp3'],  ['na', '/practice_studio/audios/tabla/Na01.mp3'],
+        ['ge', '/practice_studio/audios/tabla/Ge01.mp3']
       ];
       await Promise.all(files.map(async ([bol, path]) => {
         try {
@@ -1508,7 +1508,7 @@
        0 = muted (silence), 1 = play cymbal hit.
        Adjust JALRA_SAMPLE to match your file path.
     ═══════════════════════════════════════════════ */
-    const JALRA_SAMPLE = '/classical_music/practice_studio/audios/jalra/jalra.wav';  // ← adjust
+    const JALRA_SAMPLE = '/practice_studio/audios/jalra/jalra.wav';  // ← adjust
 
     let jPlaying   = false;
     let jIsGati     = false;
