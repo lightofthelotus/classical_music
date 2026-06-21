@@ -1,0 +1,1754 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Carnatic Ensemble Player</title>
+  <style>
+    :root {
+      --bg1: #0f172a;
+      --bg2: #111827;
+      --panel: rgba(255, 255, 255, 0.07);
+      --panel-border: rgba(255, 255, 255, 0.11);
+      --text: #e5e7eb;
+      --muted: #94a3b8;
+      --accent-t: #f59e0b;
+      /* tanpura — amber   */
+      --accent-m: #818cf8;
+      /* mridangam — indigo */
+      --accent-j: #34d399;
+      /* jalra — emerald    */
+      --active: #22c55e;
+      --radius: 20px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Inter, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(circle at top, #1e293b 0%, var(--bg1) 40%, var(--bg2) 100%);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 28px 20px 40px;
+    }
+
+    /* ── App header ─────────────────────────────── */
+    .app-header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .eyebrow {
+      font-size: 0.72rem;
+      letter-spacing: 0.26em;
+      text-transform: uppercase;
+      color: var(--accent-t);
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .app-header h1 {
+      font-size: clamp(1.5rem, 3vw, 2.4rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+
+    /* ── 3-column ensemble grid ─────────────────── */
+    .ensemble {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      max-width: 1140px;
+      margin: 0 auto;
+    }
+
+    /* ── Instrument panel ───────────────────────── */
+    .instrument-panel {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
+      border: 1px solid var(--panel-border);
+      border-radius: 28px;
+      padding: 22px 20px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      backdrop-filter: blur(14px);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+    }
+
+    /* coloured top accent line per instrument */
+    .tanpura-panel {
+      border-top: 2px solid rgba(245, 158, 11, 0.55);
+    }
+
+    .mridangam-panel {
+      border-top: 2px solid rgba(129, 140, 248, 0.55);
+    }
+
+    .jalra-panel {
+      border-top: 2px solid rgba(52, 211, 153, 0.55);
+    }
+
+    /* ── Panel header ───────────────────────────── */
+    .panel-head {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--panel-border);
+    }
+
+    .panel-icon {
+      display: flex;
+      align-items: center;
+    }
+
+    .panel-title h2 {
+      font-size: 1.1rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+    }
+
+    .panel-title .subtitle {
+      font-size: 0.72rem;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+    }
+
+    /* ── Sub-panel ──────────────────────────────── */
+    .sub-panel {
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: 16px;
+      padding: 14px;
+    }
+
+    .sub-label {
+      color: var(--muted);
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      margin-bottom: 10px;
+      display: block;
+      font-weight: 700;
+    }
+
+    /* ── Segmented control (2-up) ───────────────── */
+    .segmented {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5px;
+      background: rgba(255, 255, 255, 0.04);
+      padding: 4px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.07);
+    }
+
+    .segmented button {
+      border: 0;
+      border-radius: 9px;
+      padding: 9px 6px;
+      background: transparent;
+      color: var(--text);
+      cursor: pointer;
+      font-size: 0.78rem;
+      font-weight: 700;
+      transition: all 0.2s;
+      line-height: 1.3;
+    }
+
+    .segmented button small {
+      display: block;
+      color: var(--muted);
+      font-weight: 500;
+      font-size: 0.64rem;
+    }
+
+    .segmented button.active {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.88), rgba(251, 113, 133, 0.85));
+      color: #fff;
+    }
+
+    .segmented button.active small {
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    /* ── 12-note shruti grid ────────────────────── */
+    .notes-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+
+    .note-btn {
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
+      color: var(--text);
+      padding: 9px 4px;
+      border-radius: 11px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 800;
+      transition: all 0.16s;
+    }
+
+    .note-btn:hover {
+      border-color: rgba(245, 158, 11, 0.4);
+      transform: translateY(-1px);
+    }
+
+    .note-btn.active {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.17), rgba(255, 255, 255, 0.06));
+      border-color: rgba(34, 197, 94, 0.5);
+      box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.22);
+    }
+
+    /* ── Tala grid (2-col) ──────────────────────── */
+    .tala-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+
+    .tala-btn {
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
+      color: var(--text);
+      padding: 11px 7px;
+      border-radius: 11px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 700;
+      transition: all 0.16s;
+      text-align: center;
+      line-height: 1.3;
+    }
+
+    .tala-btn small {
+      display: block;
+      color: var(--muted);
+      font-size: 0.64rem;
+    }
+
+    .tala-btn:hover {
+      border-color: rgba(129, 140, 248, 0.45);
+      transform: translateY(-1px);
+    }
+
+    .tala-btn.active {
+      background: linear-gradient(135deg, rgba(129, 140, 248, 0.22), rgba(129, 140, 248, 0.08));
+      border-color: rgba(129, 140, 248, 0.55);
+      box-shadow: 0 0 0 1px rgba(129, 140, 248, 0.2);
+    }
+
+    .tala-btn.active small {
+      color: #a5b4fc;
+    }
+
+    /* ── Pattern grid (1-col, jalra beat patterns) ─ */
+    .pattern-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    /* ── Cymbal-tala grid (for Jalra, teal accent) ─ */
+    .cymbal-btn {
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
+      color: var(--text);
+      padding: 11px 7px;
+      border-radius: 11px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 700;
+      transition: all 0.16s;
+      text-align: center;
+      line-height: 1.3;
+    }
+
+    .cymbal-btn small {
+      display: block;
+      color: var(--muted);
+      font-size: 0.64rem;
+    }
+
+    .cymbal-btn:hover {
+      border-color: rgba(52, 211, 153, 0.45);
+      transform: translateY(-1px);
+    }
+
+    .cymbal-btn.active {
+      background: linear-gradient(135deg, rgba(52, 211, 153, 0.22), rgba(52, 211, 153, 0.08));
+      border-color: rgba(52, 211, 153, 0.55);
+      box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.2);
+    }
+
+    .cymbal-btn.active small {
+      color: #6ee7b7;
+    }
+
+    /* ── Speed grid (3-col) ─────────────────────── */
+    .speed-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+
+    .speed-btn {
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
+      color: var(--text);
+      padding: 9px 5px;
+      border-radius: 11px;
+      cursor: pointer;
+      font-size: 0.76rem;
+      font-weight: 700;
+      transition: all 0.16s;
+      text-align: center;
+      line-height: 1.3;
+    }
+
+    .speed-btn small {
+      display: block;
+      color: var(--muted);
+      font-size: 0.62rem;
+    }
+
+    .speed-btn:hover {
+      border-color: rgba(251, 191, 36, 0.4);
+    }
+
+    /* mridangam speed active */
+    .mridangam-panel .speed-btn.active {
+      background: linear-gradient(135deg, rgba(129, 140, 248, 0.22), rgba(129, 140, 248, 0.08));
+      border-color: rgba(129, 140, 248, 0.5);
+    }
+
+    .mridangam-panel .speed-btn.active small {
+      color: #a5b4fc;
+    }
+
+    /* jalra speed active */
+    .jalra-panel .speed-btn.active {
+      background: linear-gradient(135deg, rgba(52, 211, 153, 0.22), rgba(52, 211, 153, 0.08));
+      border-color: rgba(52, 211, 153, 0.5);
+    }
+
+    .jalra-panel .speed-btn.active small {
+      color: #6ee7b7;
+    }
+
+    /* ── Playback row ───────────────────────────── */
+    .play-row {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .play-btn {
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      border: 0;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 900;
+      transition: transform 0.16s, box-shadow 0.16s;
+      flex-shrink: 0;
+      color: #fff;
+    }
+
+    .play-btn:hover {
+      transform: scale(1.05);
+    }
+
+    .play-btn:active {
+      transform: scale(0.95);
+    }
+
+    .tanpura-panel .play-btn {
+      background: linear-gradient(135deg, var(--accent-t), #fb7185);
+      box-shadow: 0 8px 20px rgba(245, 158, 11, 0.28);
+    }
+
+    .mridangam-panel .play-btn {
+      background: linear-gradient(135deg, var(--accent-m), #c084fc);
+      box-shadow: 0 8px 20px rgba(129, 140, 248, 0.28);
+    }
+
+    .jalra-panel .play-btn {
+      background: linear-gradient(135deg, var(--accent-j), #22d3ee);
+      box-shadow: 0 8px 20px rgba(52, 211, 153, 0.28);
+    }
+
+    .slider-col {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .slider-row {
+      display: grid;
+      grid-template-columns: 58px 1fr 42px;
+      gap: 8px;
+      align-items: center;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      cursor: pointer;
+    }
+
+    .tanpura-panel input[type="range"] {
+      accent-color: var(--accent-t);
+    }
+
+    .mridangam-panel input[type="range"] {
+      accent-color: var(--accent-m);
+    }
+
+    .jalra-panel input[type="range"] {
+      accent-color: var(--accent-j);
+    }
+
+    /* ── Status pill ────────────────────────────── */
+    .status-row {
+      margin-top: 10px;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.04);
+      font-size: 0.76rem;
+      color: var(--muted);
+    }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #374151;
+      flex-shrink: 0;
+      transition: background 0.3s, box-shadow 0.3s;
+    }
+
+    .dot.on {
+      background: var(--active);
+      box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.15);
+    }
+
+    /* ── Compact top bar ───────────────────────── */
+    .top-bar {
+      max-width: 1140px;
+      margin: 0 auto 18px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+      border: 1px solid var(--panel-border);
+      border-radius: 20px;
+      padding: 10px 20px;
+      backdrop-filter: blur(14px);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      row-gap: 10px;
+      position: relative;
+      z-index: 100;
+    }
+    .top-bar-sep {
+      width: 1px;
+      height: 32px;
+      background: var(--panel-border);
+      margin: 0 14px;
+      flex-shrink: 0;
+    }
+    .compact-section {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .compact-label {
+      color: var(--muted);
+      font-size: 0.58rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+    }
+    /* Pa/Ma pill toggle */
+    .pa-ma-toggle {
+      display: flex;
+      gap: 3px;
+      background: rgba(255,255,255,0.04);
+      padding: 2px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.07);
+    }
+    .pa-ma-btn {
+      padding: 4px 12px;
+      border: none;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--muted);
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .pa-ma-btn.active {
+      background: linear-gradient(135deg, var(--accent-t), #fb7185);
+      color: #fff;
+    }
+    /* Arrow pickers — unified pill (shruti & tempo) */
+    .arrow-picker {
+      display: flex;
+      align-items: center;
+      background: rgba(0,0,0,0.45);
+      border: 1px solid rgba(255,255,255,0.13);
+      border-radius: 999px;
+      box-shadow: inset 0 1px 4px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.04);
+    }
+    .arrow-btn {
+      width: 30px;
+      height: 34px;
+      border: none;
+      background: transparent;
+      color: rgba(255,255,255,0.28);
+      cursor: pointer;
+      font-size: 0.58rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.15s;
+      flex-shrink: 0;
+      border-radius: 999px;
+      padding: 0;
+    }
+    .arrow-btn:hover { color: rgba(255,255,255,0.75); background: transparent; }
+    .picker-val {
+      min-width: 56px;
+      text-align: center;
+      font-size: 0.88rem;
+      font-weight: 800;
+      color: var(--text);
+      padding: 0 6px;
+      background: transparent;
+      border: none;
+      border-left: 1px solid rgba(255,255,255,0.08);
+      border-right: 1px solid rgba(255,255,255,0.08);
+      height: 34px;
+      line-height: 34px;
+      white-space: nowrap;
+    }
+    /* Mini beat-count buttons */
+    .mini-pattern-row { display: flex; gap: 4px; }
+    .mini-pattern-btn {
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.05);
+      color: var(--muted);
+      padding: 4px 10px;
+      border-radius: 7px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 700;
+      transition: all 0.15s;
+      line-height: 1.2;
+      text-align: center;
+    }
+    .mini-pattern-btn small { display: block; font-size: 0.52rem; font-weight: 500; margin-top: 1px; color: var(--muted); }
+    .mini-pattern-btn:hover { border-color: rgba(148,163,184,0.4); color: var(--text); }
+    .mini-pattern-btn.active {
+      background: rgba(148,163,184,0.18);
+      border-color: rgba(148,163,184,0.55);
+      color: var(--text);
+      box-shadow: 0 0 0 1px rgba(148,163,184,0.2);
+    }
+    .mini-pattern-btn.active small { color: #cbd5e1; }
+
+    /* ── Dropdown pickers ───────────────────────── */
+    .compact-section { position: relative; }
+
+    .picker-val { cursor: pointer; user-select: none; }
+    .picker-val:hover { color: #fff; }
+
+    .picker-dropdown {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%);
+      min-width: 150px;
+      background: #182032;
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 12px;
+      list-style: none;
+      max-height: 260px;
+      overflow-y: auto;
+      z-index: 999;
+      display: none;
+      padding: 4px;
+      box-shadow: 0 14px 36px rgba(0,0,0,0.55);
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255,255,255,0.22) transparent;
+    }
+    .picker-dropdown.open { display: block; }
+    .picker-dropdown li {
+      padding: 7px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--text);
+      white-space: nowrap;
+      transition: background 0.12s;
+    }
+    .picker-dropdown li:hover { background: rgba(255,255,255,0.09); }
+    .picker-dropdown li.ddactive {
+      background: rgba(245,158,11,0.2);
+      color: #fbbf24;
+    }
+    .picker-dropdown li small {
+      display: block;
+      font-size: 0.62rem;
+      font-weight: 500;
+      color: var(--muted);
+      margin-top: 1px;
+    }
+    .picker-dropdown li.ddactive small { color: rgba(251,191,36,0.7); }
+
+    /* ── Cycle counter ──────────────────────────── */
+    .cycle-counter {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    #cycle-count {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: var(--text);
+      min-width: 38px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.02em;
+    }
+    #cycle-reset {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.11);
+      border-radius: 8px;
+      color: var(--muted);
+      font-size: 1rem;
+      line-height: 1;
+      cursor: pointer;
+      width: 26px;
+      height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+      padding: 0;
+      flex-shrink: 0;
+    }
+    #cycle-reset:hover { color: var(--text); background: rgba(255,255,255,0.13); }
+
+    /* ── Beat · Pulse counter ───────────────────── */
+    .beat-pulse-row {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .bp-num {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: var(--text);
+      min-width: 28px;
+      text-align: center;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.02em;
+    }
+    .bp-sep {
+      color: var(--muted);
+      font-size: 1.1rem;
+      font-weight: 400;
+    }
+
+    /* ── Footer note ────────────────────────────── */
+    .footer {
+      text-align: center;
+      margin-top: 30px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    /* ── Responsive ─────────────────────────────── */
+    @media (max-width: 860px) {
+      .ensemble {
+        grid-template-columns: 1fr;
+        max-width: 500px;
+      }
+    }
+
+    @media (max-width: 540px) {
+      body {
+        padding: 16px 14px 32px;
+      }
+
+      .instrument-panel {
+        padding: 18px 14px 20px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header class="app-header">
+    <div class="eyebrow">Classical Music Ensemble</div>
+    <h1>Practice Studio</h1>
+  </header>
+
+  <div class="top-bar">
+
+    <!-- Panchamam / Madhyamam -->
+    <div class="compact-section">
+      <span class="compact-label">Tanpura</span>
+      <div class="pa-ma-toggle" id="tanpura-patterns">
+        <button class="pa-ma-btn active" data-pattern="tanpura">Pa</button>
+        <button class="pa-ma-btn" data-pattern="sama">Ma</button>
+      </div>
+    </div>
+
+    <div class="top-bar-sep"></div>
+
+    <!-- Shruti -->
+    <div class="compact-section">
+      <span class="compact-label">Shruti</span>
+      <div class="arrow-picker">
+        <button class="arrow-btn" id="note-prev">&#9664;</button>
+        <span class="picker-val" id="note-display">C</span>
+        <button class="arrow-btn" id="note-next">&#9654;</button>
+      </div>
+      <ul class="picker-dropdown" id="shruti-dropdown"></ul>
+    </div>
+
+    <div class="top-bar-sep"></div>
+
+    <!-- Tempo -->
+    <div class="compact-section">
+      <span class="compact-label">Tempo</span>
+      <div class="arrow-picker">
+        <button class="arrow-btn" id="bpm-prev">&#9664;</button>
+        <span class="picker-val" id="shared-bpm-val">60 BPM</span>
+        <button class="arrow-btn" id="bpm-next">&#9654;</button>
+      </div>
+      <ul class="picker-dropdown" id="tempo-dropdown"></ul>
+    </div>
+
+    <div class="top-bar-sep"></div>
+
+    <!-- Beats per Cycle -->
+    <div class="compact-section">
+      <span class="compact-label">Beats / Cycle</span>
+      <div class="arrow-picker">
+        <button class="arrow-btn" id="pattern-prev">&#9664;</button>
+        <span class="picker-val" id="pattern-display">4</span>
+        <button class="arrow-btn" id="pattern-next">&#9654;</button>
+      </div>
+      <ul class="picker-dropdown" id="pattern-dropdown"></ul>
+    </div>
+
+    <div class="top-bar-sep"></div>
+
+    <!-- Pulses per Beat -->
+    <div class="compact-section">
+      <span class="compact-label">Pulses / Beat</span>
+      <div class="arrow-picker">
+        <button class="arrow-btn" id="pulses-prev">&#9664;</button>
+        <span class="picker-val" id="pulses-display">4</span>
+        <button class="arrow-btn" id="pulses-next">&#9654;</button>
+      </div>
+      <ul class="picker-dropdown" id="pulses-dropdown"></ul>
+    </div>
+
+    <div class="top-bar-sep"></div>
+
+    <!-- Cycle counter -->
+    <div class="compact-section">
+      <span class="compact-label">Cycle #</span>
+      <div class="cycle-counter">
+        <span id="cycle-count">0</span>
+        <button id="cycle-reset" title="Reset counter">↺</button>
+      </div>
+    </div>
+
+    <div class="top-bar-sep"></div>
+
+    <!-- Beat · Pulse counter -->
+    <div class="compact-section">
+      <span class="compact-label">Beat · Pulse</span>
+      <div class="beat-pulse-row">
+        <span class="bp-num" id="beat-count">0</span>
+        <span class="bp-sep">·</span>
+        <span class="bp-num" id="pulse-count">0</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="ensemble">
+
+    <!-- ══════════════════════ TANPURA ══════════════════════ -->
+    <section class="instrument-panel tanpura-panel">
+      <div class="panel-head">
+        <span class="panel-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 400" width="48" height="48" fill="orange">
+          <circle cx="100" cy="350" r="45" />
+          <rect x="90" y="80" width="20" height="270" />
+          <rect x="85" y="40" width="30" height="40" rx="5" />
+          <circle cx="80" cy="50" r="5" />
+          <circle cx="80" cy="65" r="5" />
+          <circle cx="120" cy="50" r="5" />
+          <circle cx="120" cy="65" r="5" />
+          <ellipse cx="100" cy="320" rx="25" ry="10" />
+        </svg></span>
+        <div class="panel-title">
+          <h2>Tanpura</h2>
+          <span class="subtitle">Drone / Shruti</span>
+        </div>
+      </div>
+
+      <div class="sub-panel">
+        <div class="play-row">
+          <button class="play-btn" id="tanpura-play" aria-label="Play / Pause Tanpura">▶</button>
+          <div class="slider-col">
+            <div class="slider-row">
+              <span>Volume</span>
+              <input id="tanpura-vol" type="range" min="0" max="100" value="70" />
+              <strong id="tanpura-vol-val">70%</strong>
+            </div>
+          </div>
+        </div>
+        <div class="status-row">
+          <span class="status-pill">
+            <span class="dot" id="tanpura-dot"></span>
+            <span id="tanpura-status">Ready</span>
+          </span>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ══════════════════════ TABLA ══════════════════════ -->
+    <section class="instrument-panel mridangam-panel">
+      <div class="panel-head">
+        <span class="panel-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 120" width="48" height="48" fill="orange">
+          <ellipse cx="70" cy="80" rx="40" ry="30" />
+          <circle cx="70" cy="80" r="12" fill="black" />
+          <ellipse cx="140" cy="70" rx="30" ry="25" />
+          <circle cx="140" cy="70" r="10" fill="black" />
+          <rect x="40" y="100" width="60" height="10" rx="3" />
+          <rect x="115" y="95" width="50" height="10" rx="3" />
+        </svg></span>
+        <div class="panel-title">
+          <h2>Tabla</h2>
+          <span class="subtitle">Rhythm / Tala</span>
+        </div>
+        <div class="pa-ma-toggle" id="tabla-mode" style="margin-left:auto">
+          <button class="pa-ma-btn active" data-tmode="slow">Avartana</button>
+          <button class="pa-ma-btn" data-tmode="fast">Gati</button>
+        </div>
+      </div>
+
+      <div class="sub-panel">
+        <div class="play-row">
+          <button class="play-btn" id="tabla-play" aria-label="Play / Pause Tabla">▶</button>
+          <div class="slider-col">
+            <div class="slider-row">
+              <span>Volume</span>
+              <input id="tabla-vol" type="range" min="0" max="100" value="70" />
+              <strong id="tabla-vol-val">70%</strong>
+            </div>
+          </div>
+        </div>
+        <div class="status-row">
+          <span class="status-pill">
+            <span class="dot" id="tabla-dot"></span>
+            <span id="tabla-status">Ready</span>
+          </span>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ══════════════════════ JALRA ══════════════════════ -->
+    <section class="instrument-panel jalra-panel">
+      <div class="panel-head">
+        <span class="panel-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="48" height="48">
+          <circle cx="80" cy="100" r="40" fill="none" stroke="orange" stroke-width="6" />
+          <circle cx="80" cy="100" r="12" fill="orange" />
+          <circle cx="130" cy="100" r="40" fill="none" stroke="orange" stroke-width="6" />
+          <circle cx="130" cy="100" r="12" fill="orange" />
+        </svg></span>
+        <div class="panel-title">
+          <h2>Jalra</h2>
+          <span class="subtitle">Cymbals / Talam</span>
+        </div>
+        <div class="pa-ma-toggle" id="jalra-mode" style="margin-left:auto">
+          <button class="pa-ma-btn active" data-jmode="avartana">Avartana</button>
+          <button class="pa-ma-btn" data-jmode="gati">Gati</button>
+        </div>
+      </div>
+
+      <div class="sub-panel">
+        <div class="play-row">
+          <button class="play-btn" id="jalra-play" aria-label="Play / Pause Jalra">▶</button>
+          <div class="slider-col">
+            <div class="slider-row">
+              <span>Volume</span>
+              <input id="jalra-vol" type="range" min="0" max="100" value="70" />
+              <strong id="jalra-vol-val">70%</strong>
+            </div>
+          </div>
+        </div>
+        <div class="status-row">
+          <span class="status-pill">
+            <span class="dot" id="jalra-dot"></span>
+            <span id="jalra-status">Ready</span>
+          </span>
+        </div>
+      </div>
+
+    </section>
+
+  </div><!-- /.ensemble -->
+
+  <p class="footer">
+    Copyright &copy; 2026 sudanjana.com
+  </p>
+
+  <script>
+    /* ═══════════════════════════════════════════════
+       TANPURA
+       Uses AudioBufferSourceNode.loop = true for a
+       sample-accurate, gap-free seamless loop.
+       The HTMLAudioElement loop has a known re-seek
+       gap; Web Audio API has none.
+    ═══════════════════════════════════════════════ */
+    const NOTES = [
+      { label: 'C',  file: 'c.wav',  hz: 261.63 },
+      { label: 'C#', file: 'cs.wav', hz: 277.18 },
+      { label: 'D',  file: 'd.wav',  hz: 293.66 },
+      { label: 'D#', file: 'ds.wav', hz: 311.13 },
+      { label: 'E',  file: 'e.wav',  hz: 329.63 },
+      { label: 'F',  file: 'f.wav',  hz: 349.23 },
+      { label: 'F#', file: 'fs.wav', hz: 369.99 },
+      { label: 'G',  file: 'g.wav',  hz: 392.00 },
+      { label: 'G#', file: 'gs.wav', hz: 415.30 },
+      { label: 'A',  file: 'a.wav',  hz: 440.00 },
+      { label: 'A#', file: 'as.wav', hz: 466.16 },
+      { label: 'B',  file: 'b.wav',  hz: 493.88 },
+    ];
+
+    // ← adjust these paths to match your server layout
+    const TANPURA_BASES = {
+      tanpura: '/audios/wav/sapa/',
+      sama:    '/audios/wav/sama/',
+    };
+
+    let tPattern    = 'tanpura';
+    let sharedNote  = NOTES[0];  // shared by tanpura (file) and mridangam (hz)
+    let tAudioCtx   = null;
+    let tGainNode   = null;
+    let tSourceNode = null;
+    let tBuffer     = null;
+    let tIsPlaying  = false;
+    let tCurrentUrl = '';
+
+    const tPlay   = document.getElementById('tanpura-play');
+    const tStatus = document.getElementById('tanpura-status');
+    const tDot    = document.getElementById('tanpura-dot');
+    const tVol    = document.getElementById('tanpura-vol');
+    const tVolVal = document.getElementById('tanpura-vol-val');
+
+    function getTCtx() {
+      if (!tAudioCtx) tAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      return tAudioCtx;
+    }
+
+    async function tLoadBuffer(url) {
+      if (url === tCurrentUrl && tBuffer) return tBuffer;
+      tCurrentUrl = url;
+      tBuffer = null;
+      try {
+        const ctx = getTCtx();
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('not found');
+        const arr = await res.arrayBuffer();
+        tBuffer = await ctx.decodeAudioData(arr);
+      } catch (e) {
+        tStatus.textContent = 'File not found';
+      }
+      return tBuffer;
+    }
+
+    function tStartSource(buf) {
+      const ctx = getTCtx();
+      if (!tGainNode) {
+        tGainNode = ctx.createGain();
+        tGainNode.gain.value = tVol.value / 100;
+        tGainNode.connect(ctx.destination);
+      }
+      if (tSourceNode) {
+        try { tSourceNode.stop(); } catch (e) {}
+        tSourceNode.disconnect();
+        tSourceNode = null;
+      }
+      tSourceNode = ctx.createBufferSource();
+      tSourceNode.buffer = buf;
+      tSourceNode.loop   = true;   // gap-free sample-accurate loop
+      tSourceNode.connect(tGainNode);
+      tSourceNode.start(0);
+    }
+
+    async function tRefresh() {
+      const url = `${TANPURA_BASES[tPattern]}${sharedNote.file}`;
+      const buf = await tLoadBuffer(url);
+      if (tIsPlaying && buf) tStartSource(buf);
+    }
+
+    let sharedNoteIdx = 0;
+
+    function stepNote(dir) {
+      sharedNoteIdx = (sharedNoteIdx + dir + NOTES.length) % NOTES.length;
+      sharedNote = NOTES[sharedNoteIdx];
+      document.getElementById('note-display').textContent = sharedNote.label;
+      tRefresh();
+      tDetune = (T_SCALE_MAP[sharedNote.label] ?? 0) * 100;
+      const dd = document.getElementById('shruti-dropdown');
+      dd.querySelectorAll('li').forEach((l, i) => l.classList.toggle('ddactive', i === sharedNoteIdx));
+      if (dd.classList.contains('open')) {
+        const hit = dd.querySelector('li.ddactive');
+        if (hit) hit.scrollIntoView({ block: 'nearest' });
+      }
+    }
+
+    document.getElementById('note-prev').addEventListener('click', () => stepNote(-1));
+    document.getElementById('note-next').addEventListener('click', () => stepNote(1));
+
+    document.querySelectorAll('#tanpura-patterns button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#tanpura-patterns button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        tPattern = btn.dataset.pattern;
+        tRefresh();
+      });
+    });
+
+    tPlay.addEventListener('click', async () => {
+      const ctx = getTCtx();
+      if (ctx.state === 'suspended') await ctx.resume();
+      if (tIsPlaying) {
+        if (tSourceNode) {
+          try { tSourceNode.stop(); } catch (e) {}
+          tSourceNode.disconnect();
+          tSourceNode = null;
+        }
+        tIsPlaying = false;
+        tPlay.textContent = '▶';
+        tStatus.textContent = 'Paused';
+        tDot.classList.remove('on');
+      } else {
+        const url = `${TANPURA_BASES[tPattern]}${sharedNote.file}`;
+        const buf = await tLoadBuffer(url);
+        if (buf) {
+          tStartSource(buf);
+          tIsPlaying = true;
+          tPlay.textContent = '❚❚';
+          tStatus.textContent = 'Playing';
+          tDot.classList.add('on');
+        }
+      }
+    });
+
+    tVol.addEventListener('input', () => {
+      if (tGainNode) tGainNode.gain.value = tVol.value / 100;
+      tVolVal.textContent = `${tVol.value}%`;
+    });
+
+    // note-display already shows "C" in HTML; sharedNote = NOTES[0] from declaration
+
+    /* ═══════════════════════════════════════════════
+       SHARED ENSEMBLE STATE
+       One AudioContext + BPM for both mridangam & jalra.
+       claimNextBeatTime() lets the second instrument
+       snap onto the next beat of the already-running one.
+    ═══════════════════════════════════════════════ */
+    let sharedCtx            = null;
+    let sharedBpm            = 60;
+    let sharedPulsesPerBeat  = 4;
+    let ensemblePhaseStart   = null;  // ctx.currentTime when beat-0 was established
+
+    function getCtx() {
+      if (!sharedCtx) sharedCtx = new (window.AudioContext || window.webkitAudioContext)();
+      return sharedCtx;
+    }
+
+    function claimNextBeatTime() {
+      const ctx = getCtx();
+      const now = ctx.currentTime;
+      if (ensemblePhaseStart === null) {
+        ensemblePhaseStart = now + 0.05;
+        return ensemblePhaseStart;
+      }
+      const beatDur   = 60 / sharedBpm;
+      const elapsed   = now - ensemblePhaseStart;
+      const nextBeat  = Math.ceil((elapsed / beatDur) + 0.02);
+      return ensemblePhaseStart + nextBeat * beatDur;
+    }
+
+    function resetEnsemblePhase() {
+      if (!tablaPlaying && !jPlaying) ensemblePhaseStart = null;
+    }
+
+    let cycleCount = 0;
+    function updateCycleDisplay() {
+      const el = document.getElementById('cycle-count');
+      if (el) el.textContent = cycleCount;
+    }
+    function resetCycleCount() {
+      cycleCount = 0;
+      updateCycleDisplay();
+    }
+    function onParamChange() {
+      const isPlaying = tablaPlaying || jPlaying;
+      const nextTime  = isPlaying ? claimNextBeatTime() : null;
+      if (tablaPlaying) { tStep = 0; tPulseStep = 0; tNextTime = nextTime; }
+      if (jPlaying)     { jBeatIdx = 0; jPulseStep = 0; jNextTime = nextTime; }
+      if (isPlaying && nextTime !== null) ensemblePhaseStart = nextTime;
+      cycleCount = isPlaying ? 1 : 0;
+      updateCycleDisplay();
+    }
+
+    function updateBeatPulseDisplay() {
+      const beatEl  = document.getElementById('beat-count');
+      const pulseEl = document.getElementById('pulse-count');
+      if (!beatEl || !pulseEl) return;
+      if (!tablaPlaying && !jPlaying || !ensemblePhaseStart) {
+        beatEl.textContent = 0; pulseEl.textContent = 0; return;
+      }
+      const ctx = getCtx();
+      const now = ctx.currentTime;
+      if (now < ensemblePhaseStart) return;
+      const isGati = tablaPlaying ? isTalaFast : jIsGati;
+      const P      = isGati ? sharedPulsesPerBeat : 1;
+      const N      = tActiveBeat;
+      const spb    = 60 / (sharedBpm * P);
+      const total  = Math.floor((now - ensemblePhaseStart) / spb);
+      beatEl.textContent  = Math.floor(total / P) % N + 1;
+      pulseEl.textContent = total % P + 1;
+    }
+
+    const sharedBpmVal = document.getElementById('shared-bpm-val');
+
+    function stepBpm(dir) {
+      sharedBpm = Math.min(500, Math.max(30, sharedBpm + dir * 10));
+      sharedBpmVal.textContent = `${sharedBpm} BPM`;
+      if (ensemblePhaseStart !== null && sharedCtx) ensemblePhaseStart = sharedCtx.currentTime;
+      const dd = document.getElementById('tempo-dropdown');
+      dd.querySelectorAll('li').forEach(l => l.classList.toggle('ddactive', l.textContent === `${sharedBpm} BPM`));
+      if (dd.classList.contains('open')) {
+        const hit = dd.querySelector('li.ddactive');
+        if (hit) hit.scrollIntoView({ block: 'nearest' });
+      }
+    }
+
+    document.getElementById('bpm-prev').addEventListener('click', () => stepBpm(-1));
+    document.getElementById('bpm-next').addEventListener('click', () => stepBpm(1));
+
+    /* ═══════════════════════════════════════════════
+       SHARED BEAT PATTERNS
+       One pattern drives both instruments. Jalra
+       respects muted beats; tabla plays tala bols.
+       Both use 60/sharedBpm per stroke → same pace.
+    ═══════════════════════════════════════════════ */
+    const SHARED_PATTERNS = [
+      {
+        sub:            '3 — Tha Ki Ta',
+        jalraBeats:     [1,1,0],
+        mridangamTypes: ['tha','dhi','nam'],
+      },
+      {
+        sub:            '4 — Chatushra Eka Tha Ka Dhi Mi',
+        jalraBeats:     [1,1,1,1],
+        mridangamTypes: ['tha','nam','dhi','nam'],
+      },
+      {
+        sub:            '5 — Khanda Chapu Tha Ka Tha Ki Ta',
+        jalraBeats:     [1,0,1,1,0],
+        mridangamTypes: ['tha','nam','tha','dhi','nam'],
+      },
+      {
+        sub:            '6 — Rupaka Tha Ki Ta Tha Ki Ta',
+        jalraBeats:     [1,0,1,1,1,1],
+        mridangamTypes: ['tha','dhi','nam','tha','dhi','nam'],
+      },
+      {
+        sub:            '7 — Misra Chapu Tha Ki Ta Tha Ka Dhi Mi',
+        jalraBeats:     [1,1,0,1,0,1,0],
+        mridangamTypes: ['tha','dhi','nam','tha','nam','dhi','nam'],
+      },
+      {
+        sub:            '8 — Adi Tha Ka Dhi Mi Tha Ka Dhi Mi',
+        jalraBeats:     [1,1,1,1,1,0,1,0],
+        mridangamTypes: ['tha','nam','dhi','nam','tha','nam','dhi','nam'],
+      },
+      {
+        sub:            '9 — Tha Ka Tha Ki Ta Tha Ka Dhi Mi',
+        jalraBeats:     [1,0,1,1,0,1,1,1,0],
+        mridangamTypes: ['tha','nam','tha','dhi','nam','tha','nam','dhi','nam'],
+      }
+    ];
+
+    let currentPatternIdx = 1;
+    let currentPattern    = SHARED_PATTERNS[currentPatternIdx];
+
+    function setPattern(idx) {
+      currentPatternIdx = idx;
+      currentPattern    = SHARED_PATTERNS[idx];
+      tActiveBeat       = currentPattern.mridangamTypes.length;
+      document.getElementById('pattern-display').textContent = currentPattern.sub.split(' — ')[0];
+      const dd = document.getElementById('pattern-dropdown');
+      dd.querySelectorAll('li').forEach((l, i) => l.classList.toggle('ddactive', i === idx));
+      if (dd.classList.contains('open')) {
+        const hit = dd.querySelector('li.ddactive');
+        if (hit) hit.scrollIntoView({ block: 'nearest' });
+      }
+      onParamChange();
+    }
+
+    function stepPattern(dir) {
+      setPattern((currentPatternIdx + dir + SHARED_PATTERNS.length) % SHARED_PATTERNS.length);
+    }
+
+    /* ═══════════════════════════════════════════════
+       TABLA — real MP3 samples (+ synthesis fallback)
+       Uses the shared AudioContext and ensemble phase
+       so it locks in sync with Jalra.
+       Shruti, BPM, and beat count all come from the
+       top-bar shared controls.
+    ═══════════════════════════════════════════════ */
+
+    // ── Tala vibhag (beat groupings) ─────────────
+    const TABLA_TALAS = {
+      3: { vibhag: [3] },
+      4: { vibhag: [2, 2] },
+      5: { vibhag: [2, 3] },
+      6: { vibhag: [3, 3] },
+      7: { vibhag: [3, 2, 2] },
+      8: { vibhag: [4, 4] },
+      9: { vibhag: [2, 3, 4] }
+    };
+
+    // ── Per-bol articulation (from 12notez audioEngine.js) ──
+    const T_ART = {
+      dha: { decay: 0.45, gain: 1.1 },
+      tin: { highpass: 600, decay: 0.35, gain: 1.0 },
+      ta:  { highpass: 300, lowpass: 3000, decay: 0.07, gain: 1.3 }
+    };
+
+    const T_BEAT_BOL = { sam: 'dha', vibhag: 'tin', regular: 'ta' };
+
+    // Octave-wrapped scale detune (from audioEngine.js setScale)
+    const T_SCALE_MAP = {
+      'C':0,'C#':1,'D':2,'D#':3,'E':4,'F':5,
+      'F#':-6,'G':-5,'G#':-4,'A':-3,'A#':-2,'B':-1
+    };
+
+    // ── State ────────────────────────────────────
+    let tBufs        = {};
+    let tDetune      = 0;
+    let tReady       = false;
+    let tGain        = null;
+    let tablaPlaying = false;
+    let tActiveBeat  = 4;      // updated by pattern selector
+    let isTalaFast   = false;
+    let tPendingFast = null;   // deferred mode change — applied at next beat start
+    let tStep        = 0;
+    let tPulseStep   = 0;
+    let tNextTime    = 0;
+    let tTimer       = null;
+
+    const T_AHEAD_SEC = 0.12;
+    const T_SCHED_MS  = 25;
+
+    const tablaPlay   = document.getElementById('tabla-play');
+    const tablaStatus = document.getElementById('tabla-status');
+    const tablaDot    = document.getElementById('tabla-dot');
+    const tablaVol    = document.getElementById('tabla-vol');
+    const tablaVolVal = document.getElementById('tabla-vol-val');
+
+    // ── Build EQ chain + load MP3s ───────────────
+    async function tablaInit() {
+      const ctx = getCtx();
+
+      tGain = ctx.createGain();
+      tGain.gain.value = tablaVol.value / 100;
+
+      const mk = (type, freq, Q, gainDb) => {
+        const f = ctx.createBiquadFilter();
+        f.type = type; f.frequency.value = freq;
+        if (Q    !== undefined) f.Q.value    = Q;
+        if (gainDb !== undefined) f.gain.value = gainDb;
+        return f;
+      };
+      const eqSub  = mk('lowshelf',  80,    undefined, 5);
+      const eqLow  = mk('peaking',  200,  0.8,  4);
+      const eqMid  = mk('peaking',  450,  1.0,  3);
+      const eqPres = mk('peaking', 2200,  1.5,  2);
+      const eqAT   = mk('peaking', 3200,  2.0, -3);
+      const eqHi   = mk('highshelf', 6000, undefined, -5);
+      const comp   = ctx.createDynamicsCompressor();
+      comp.threshold.value = -15; comp.knee.value = 15;
+      comp.ratio.value = 4; comp.attack.value = 0.002; comp.release.value = 0.2;
+
+      // Subtle reverb
+      const conv = ctx.createConvolver();
+      const ri = ctx.createBuffer(2, Math.floor(ctx.sampleRate * 0.5), ctx.sampleRate);
+      for (let ch = 0; ch < 2; ch++) {
+        const d = ri.getChannelData(ch);
+        for (let i = 0; i < d.length; i++) d[i] = (Math.random()*2-1) * Math.exp(-(i/ctx.sampleRate)/0.3) * 0.5;
+      }
+      conv.buffer = ri;
+      const dry = ctx.createGain(); dry.gain.value = 0.93;
+      const wet = ctx.createGain(); wet.gain.value = 0.07;
+
+      tGain.connect(eqSub); eqSub.connect(eqLow); eqLow.connect(eqMid);
+      eqMid.connect(eqPres); eqPres.connect(eqAT); eqAT.connect(eqHi);
+      eqHi.connect(dry); eqHi.connect(conv); conv.connect(wet);
+      dry.connect(comp); wet.connect(comp); comp.connect(ctx.destination);
+
+      // Load MP3s from local audios/tabla/
+      const files = [
+        ['dha','audios/tabla/Dha01.mp3'], ['tin','audios/tabla/Tin01.mp3'],
+        ['ta', 'audios/tabla/Ta01.mp3'],  ['na', 'audios/tabla/Na01.mp3'],
+        ['ge', 'audios/tabla/Ge01.mp3']
+      ];
+      await Promise.all(files.map(async ([bol, path]) => {
+        try {
+          const r = await fetch(path);
+          if (!r.ok) throw new Error(r.status);
+          tBufs[bol] = await ctx.decodeAudioData(await r.arrayBuffer());
+        } catch(e) { console.warn('Tabla:', path, e); }
+      }));
+
+      // dha = Ge + Na combined
+      if (tBufs.ge && tBufs.na) {
+        const maxLen = Math.max(tBufs.ge.length, tBufs.na.length);
+        const out = ctx.createBuffer(2, maxLen, ctx.sampleRate);
+        for (let ch = 0; ch < 2; ch++) {
+          const dst = out.getChannelData(ch);
+          [tBufs.ge, tBufs.na].forEach(b => {
+            const src = b.getChannelData(Math.min(ch, b.numberOfChannels-1));
+            for (let i = 0; i < src.length; i++) dst[i] += src[i] / 2;
+          });
+        }
+        let pk = 0;
+        for (let ch = 0; ch < 2; ch++) { const d = out.getChannelData(ch); for (let i = 0; i < d.length; i++) pk = Math.max(pk, Math.abs(d[i])); }
+        if (pk > 0.01) { const sc = 0.95/pk; for (let ch = 0; ch < 2; ch++) { const d = out.getChannelData(ch); for (let i = 0; i < d.length; i++) d[i] *= sc; } }
+        tBufs.dha = out;
+      }
+
+      const loaded = ['dha','tin','ta'].filter(k => tBufs[k]).length;
+      if (loaded < 3) tSynthFallback(ctx);
+
+      tReady      = true;
+      tDetune     = (T_SCALE_MAP[sharedNote.label] ?? 0) * 100;
+      tActiveBeat = currentPattern.mridangamTypes.length;
+      tablaStatus.textContent = loaded >= 3 ? 'Ready' : 'Ready (synth)';
+    }
+
+    // ── Synthesis fallback (ported from 12notez audioEngine.js) ──
+    function tSynthFallback(ctx) {
+      const Sa = 261.63, Pa = 65.41;
+      function norm(b) {
+        let pk=0; for(let ch=0;ch<b.numberOfChannels;ch++){const d=b.getChannelData(ch);for(let i=0;i<d.length;i++)pk=Math.max(pk,Math.abs(d[i]));}
+        if(pk>0.01){const sc=0.95/pk;for(let ch=0;ch<b.numberOfChannels;ch++){const d=b.getChannelData(ch);for(let i=0;i<d.length;i++)d[i]*=sc;}} return b;
+      }
+      function sDay({f,modes,ma,decay,br,atk,sR,na=0.15}){
+        const sr=ctx.sampleRate,n=Math.floor(sr*Math.min(decay*4,2)),b=ctx.createBuffer(2,n,sr);
+        for(let ch=0;ch<2;ch++){const d=b.getChannelData(ch),so=(ch===0?1:-1)*0.02;for(let i=0;i<n;i++){const t=i/sr;let s=0;modes.forEach((m,ix)=>{const sd=sR*(ix>0?.02*Math.sin(ix):0);s+=ma[ix]*Math.sin(2*Math.PI*f*m*(1+sd)*t+so)*Math.exp(-t/(decay/(1+ix*.3)));});d[i]=(s*(1-Math.exp(-t/atk))*Math.exp(-t/(decay*br*2))+(Math.random()*2-1)*na*Math.exp(-t/.01))*.7;}}
+        return norm(b);
+      }
+      function sBay({f,modes,ma,decay,pb,bt,atk,na=0.1}){
+        const sr=ctx.sampleRate,n=Math.floor(sr*Math.min(decay*3,2.5)),b=ctx.createBuffer(2,n,sr);
+        for(let ch=0;ch<2;ch++){const d=b.getChannelData(ch),so=(ch===0?-1:1)*.03;for(let i=0;i<n;i++){const t=i/sr;const bd=bt>0&&t<bt?1+(pb-1)*(1-Math.exp(-(t/bt)*5)):(bt>0?pb:1);let s=0;modes.forEach((m,ix)=>{s+=ma[ix]*Math.sin(2*Math.PI*f*m*bd*t+so)*Math.exp(-t/(decay/(1+ix*.2)));});d[i]=((s+Math.sin(2*Math.PI*f*.5*bd*t)*.3*Math.exp(-t/(decay*.7)))*(1-Math.exp(-t/atk))+(Math.random()*2-1)*na*Math.exp(-t/.015))*.8;}}
+        return norm(b);
+      }
+      tBufs.na  = sDay({f:Sa,    modes:[1,2,3,3.6,4.2,4.8],    ma:[1,.7,.45,.3,.2,.12], decay:.6, br:.75,atk:.002, sR:.85});
+      tBufs.tin = sDay({f:Sa*1.01,modes:[1,2,3,3.6,4.2,4.8,5.4],ma:[1,.8,.6,.45,.3,.2,.1],decay:.7, br:.9, atk:.002, sR:.95});
+      tBufs.ta  = sDay({f:Sa*.82, modes:[1,1.5,2.2],            ma:[1,.25,.08],          decay:.15,br:.35,atk:.0008,sR:.15,na:.2});
+      tBufs.ge  = sBay({f:Pa,     modes:[1,1.34,1.66,2],        ma:[1,.5,.3,.15],        decay:.95,pb:.9, bt:.18,  atk:.004});
+      const out = ctx.createBuffer(2, Math.max(tBufs.ge.length,tBufs.na.length), ctx.sampleRate);
+      for(let ch=0;ch<2;ch++){const dst=out.getChannelData(ch);[tBufs.ge,tBufs.na].forEach(b=>{const src=b.getChannelData(Math.min(ch,b.numberOfChannels-1));for(let i=0;i<src.length;i++)dst[i]+=src[i]/2;});}
+      tBufs.dha = norm(out);
+    }
+
+    // ── Beat type detection ───────────────────────
+    function tGetType(step, beats) {
+      if (step === 0) return 'sam';
+      let sum = 0;
+      for (const g of TABLA_TALAS[beats].vibhag) { sum += g; if (step === sum) return 'vibhag'; }
+      return 'regular';
+    }
+
+    // ── Play one bol at scheduled time ───────────
+    function tPlayBeat(type, time) {
+      const ctx = getCtx();
+      const bol = T_BEAT_BOL[type];
+      const buf = tBufs[bol];
+      if (!buf) return;
+      const art = T_ART[bol];
+      const vel = type === 'sam' ? 1.0 : type === 'vibhag' ? 0.85 : 0.65;
+
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      src.detune.value = tDetune;
+
+      let last = src;
+      if (art?.highpass) { const f=ctx.createBiquadFilter(); f.type='highpass'; f.frequency.value=art.highpass; f.Q.value=0.8; last.connect(f); last=f; }
+      if (art?.lowpass)  { const f=ctx.createBiquadFilter(); f.type='lowpass';  f.frequency.value=art.lowpass;  f.Q.value=0.8; last.connect(f); last=f; }
+
+      const g = ctx.createGain();
+      const vol = vel * (art?.gain || 1);
+      if (art?.decay) { g.gain.setValueAtTime(vol, time); g.gain.exponentialRampToValueAtTime(0.001, time + art.decay); }
+      else { g.gain.value = vol; }
+      last.connect(g); g.connect(tGain);
+      src.start(time);
+      if (art?.decay) src.stop(time + art.decay + 0.02);
+    }
+
+    // ── Scheduler ────────────────────────────────
+    function tSchedule() {
+      const ctx = getCtx();
+      const N   = tActiveBeat;
+      while (tNextTime < ctx.currentTime + T_AHEAD_SEC) {
+        if (tPulseStep === 0 && tPendingFast !== null) {
+          isTalaFast  = tPendingFast;
+          tPendingFast = null;
+        }
+        const P   = isTalaFast ? sharedPulsesPerBeat : 1;
+        const spb = 60 / (sharedBpm * P);
+        tPlayBeat(tPulseStep === 0 ? tGetType(tStep, N) : 'regular', tNextTime);
+        tNextTime  += spb;
+        tPulseStep  = (tPulseStep + 1) % P;
+        if (tPulseStep === 0) {
+          tStep = (tStep + 1) % N;
+          if (tStep === 0) { cycleCount++; updateCycleDisplay(); }
+        }
+      }
+      updateBeatPulseDisplay();
+      tTimer = setTimeout(tSchedule, T_SCHED_MS);
+    }
+
+    // ── Play / Stop ──────────────────────────────
+    async function tablaToggle() {
+      const ctx = getCtx();
+      if (ctx.state === 'suspended') await ctx.resume();
+      if (!tReady) { tablaStatus.textContent = 'Loading…'; await tablaInit(); }
+
+      if (tablaPlaying) {
+        clearTimeout(tTimer);
+        tablaPlaying = false;
+        tablaPlay.textContent = '▶';
+        tablaStatus.textContent = 'Paused';
+        tablaDot.classList.remove('on');
+        resetEnsemblePhase();
+        updateBeatPulseDisplay();
+      } else {
+        tStep      = 0;
+        tPulseStep = 0;
+        tNextTime  = claimNextBeatTime();
+        ensemblePhaseStart = tNextTime;
+        cycleCount = 1; updateCycleDisplay();
+        tablaPlaying = true;
+        tSchedule();
+        tablaPlay.textContent = '❚❚';
+        tablaStatus.textContent = 'Playing';
+        tablaDot.classList.add('on');
+      }
+    }
+
+    tablaPlay.addEventListener('click', tablaToggle);
+    tablaVol.addEventListener('input', () => {
+      if (tGain) tGain.gain.value = tablaVol.value / 100;
+      tablaVolVal.textContent = `${tablaVol.value}%`;
+    });
+
+    // ── Slow / Fast mode toggle ───────────────────
+    document.querySelectorAll('#tabla-mode .pa-ma-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        tPendingFast = btn.dataset.tmode === 'fast';
+        document.querySelectorAll('#tabla-mode .pa-ma-btn').forEach(b => b.classList.toggle('active', b === btn));
+      });
+    });
+
+    /* ═══════════════════════════════════════════════
+       JALRA — Web Audio API beat scheduler
+       Fires jalraBeats[i] from the shared pattern.
+       0 = muted (silence), 1 = play cymbal hit.
+       Adjust JALRA_SAMPLE to match your file path.
+    ═══════════════════════════════════════════════ */
+    const JALRA_SAMPLE = '/audios/jalra/jalra.wav';  // ← adjust
+
+    let jPlaying   = false;
+    let jIsGati     = false;
+    let jPendingGati = null;   // deferred mode change — applied at next beat start
+    let jPulseStep = 0;
+    let jGainNode  = null;
+    let jBuffer   = null;
+    let jBeatIdx  = 0;
+    let jNextTime = 0;
+    let jTimer    = null;
+
+    const J_LOOKAHEAD_SEC = 0.15;
+    const J_SCHEDULE_MS   = 50;
+
+    const jPlay   = document.getElementById('jalra-play');
+    const jStatus = document.getElementById('jalra-status');
+    const jDot    = document.getElementById('jalra-dot');
+    const jVol    = document.getElementById('jalra-vol');
+    const jVolVal = document.getElementById('jalra-vol-val');
+
+    async function jInitAudio() {
+      const ctx = getCtx();
+      if (!jGainNode) {
+        jGainNode = ctx.createGain();
+        jGainNode.gain.value = jVol.value / 100;
+        jGainNode.connect(ctx.destination);
+      }
+      if (!jBuffer) {
+        try {
+          const res = await fetch(JALRA_SAMPLE);
+          if (!res.ok) throw new Error('not found');
+          const arr = await res.arrayBuffer();
+          jBuffer = await ctx.decodeAudioData(arr);
+        } catch (e) {
+          jStatus.textContent = 'File not found';
+        }
+      }
+    }
+
+    function jSchedule() {
+      const ctx = getCtx();
+      while (jNextTime < ctx.currentTime + J_LOOKAHEAD_SEC) {
+        if (jPulseStep === 0 && jPendingGati !== null) {
+          jIsGati     = jPendingGati;
+          jPendingGati = null;
+        }
+        const P   = jIsGati ? sharedPulsesPerBeat : 1;
+        const spb = 60 / (sharedBpm * P);
+        const p = currentPattern;
+        // Avartana: ring on beat starts per jalraBeats pattern
+        // Gati: ring on every pulse (marking each subdivision)
+        const shouldRing = jIsGati
+          ? !!jBuffer
+          : (jPulseStep === 0 && !!p.jalraBeats[jBeatIdx % p.jalraBeats.length] && !!jBuffer);
+        if (shouldRing) {
+          const src = ctx.createBufferSource();
+          src.buffer = jBuffer;
+          src.connect(jGainNode);
+          src.start(jNextTime);
+        }
+        jNextTime  += spb;
+        jPulseStep  = (jPulseStep + 1) % P;
+        if (jPulseStep === 0) {
+          jBeatIdx++;
+          if (!tablaPlaying && jBeatIdx % p.jalraBeats.length === 0) { cycleCount++; updateCycleDisplay(); }
+        }
+      }
+      if (!tablaPlaying) updateBeatPulseDisplay();
+      jTimer = setTimeout(jSchedule, J_SCHEDULE_MS);
+    }
+
+    async function jToggle() {
+      const ctx = getCtx();
+      if (ctx.state === 'suspended') await ctx.resume();
+      await jInitAudio();
+      if (jPlaying) {
+        clearTimeout(jTimer);
+        jPlaying = false;
+        jPlay.textContent = '▶';
+        jStatus.textContent = 'Paused';
+        jDot.classList.remove('on');
+        resetEnsemblePhase();
+        if (!tablaPlaying) updateBeatPulseDisplay();
+      } else {
+        jBeatIdx   = 0;
+        jPulseStep = 0;
+        jNextTime  = claimNextBeatTime();
+        if (!tablaPlaying) {
+          ensemblePhaseStart = jNextTime;
+          cycleCount = 1; updateCycleDisplay();
+        }
+        jPlaying  = true;
+        jSchedule();
+        jPlay.textContent = '❚❚';
+        jStatus.textContent = 'Playing';
+        jDot.classList.add('on');
+      }
+    }
+
+    jPlay.addEventListener('click', jToggle);
+    jVol.addEventListener('input', () => {
+      if (jGainNode) jGainNode.gain.value = jVol.value / 100;
+      jVolVal.textContent = `${jVol.value}%`;
+    });
+    document.querySelectorAll('#jalra-mode .pa-ma-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        jPendingGati = btn.dataset.jmode === 'gati';
+        document.querySelectorAll('#jalra-mode .pa-ma-btn').forEach(b => b.classList.toggle('active', b === btn));
+      });
+    });
+
+    document.getElementById('cycle-reset').addEventListener('click', resetCycleCount);
+
+    /* ═══════════════════════════════════════════════
+       DROPDOWN INITIALISATION
+       Runs once after all declarations are in scope.
+    ═══════════════════════════════════════════════ */
+    function openDropdown(ddEl) {
+      const wasOpen = ddEl.classList.contains('open');
+      document.querySelectorAll('.picker-dropdown.open').forEach(d => d.classList.remove('open'));
+      if (!wasOpen) {
+        ddEl.classList.add('open');
+        const hit = ddEl.querySelector('li.ddactive');
+        if (hit) hit.scrollIntoView({ block: 'nearest' });
+      }
+    }
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.compact-section')) {
+        document.querySelectorAll('.picker-dropdown.open').forEach(d => d.classList.remove('open'));
+      }
+    });
+
+    // ── Shruti dropdown ──────────────────────────
+    (function() {
+      const dd = document.getElementById('shruti-dropdown');
+      NOTES.forEach((note, i) => {
+        const li = document.createElement('li');
+        li.textContent = note.label;
+        if (i === 0) li.classList.add('ddactive');
+        li.addEventListener('click', () => {
+          sharedNoteIdx = i;
+          sharedNote    = NOTES[i];
+          document.getElementById('note-display').textContent = sharedNote.label;
+          tRefresh();
+          tDetune = (T_SCALE_MAP[sharedNote.label] ?? 0) * 100;
+          dd.querySelectorAll('li').forEach((l, j) => l.classList.toggle('ddactive', j === i));
+          dd.classList.remove('open');
+        });
+        dd.appendChild(li);
+      });
+      document.getElementById('note-display').addEventListener('click', e => {
+        e.stopPropagation();
+        openDropdown(dd);
+      });
+    })();
+
+    // ── Tempo dropdown ───────────────────────────
+    (function() {
+      const dd = document.getElementById('tempo-dropdown');
+      const BPM_LIST = [30,40,50,60,70,80,90,100,110,120,130,140,150,160,170,180,200,220,240];
+      BPM_LIST.forEach(bpm => {
+        const li = document.createElement('li');
+        li.textContent = `${bpm} BPM`;
+        if (bpm === sharedBpm) li.classList.add('ddactive');
+        li.addEventListener('click', () => {
+          sharedBpm = bpm;
+          sharedBpmVal.textContent = `${bpm} BPM`;
+          if (ensemblePhaseStart !== null && sharedCtx) ensemblePhaseStart = sharedCtx.currentTime;
+          dd.querySelectorAll('li').forEach(l => l.classList.toggle('ddactive', l.textContent === `${bpm} BPM`));
+          dd.classList.remove('open');
+        });
+        dd.appendChild(li);
+      });
+      document.getElementById('shared-bpm-val').addEventListener('click', e => {
+        e.stopPropagation();
+        openDropdown(dd);
+      });
+    })();
+
+    // ── Pulses / Beat dropdown ───────────────────
+    (function() {
+      const PULSES_LIST = [
+        { n: 3, name: 'Tisra Gati' },
+        { n: 4, name: 'Chatusra Gati' },
+        { n: 5, name: 'Khanda Gati' },
+        { n: 7, name: 'Misra Gati' },
+        { n: 9, name: 'Sankeerna Gati' },
+      ];
+      const dd = document.getElementById('pulses-dropdown');
+      let pIdx = PULSES_LIST.findIndex(p => p.n === sharedPulsesPerBeat);
+
+      function setPulses(idx) {
+        pIdx = (idx + PULSES_LIST.length) % PULSES_LIST.length;
+        sharedPulsesPerBeat = PULSES_LIST[pIdx].n;
+        document.getElementById('pulses-display').textContent = sharedPulsesPerBeat;
+        dd.querySelectorAll('li').forEach((l, i) => l.classList.toggle('ddactive', i === pIdx));
+        if (dd.classList.contains('open')) {
+          const hit = dd.querySelector('li.ddactive');
+          if (hit) hit.scrollIntoView({ block: 'nearest' });
+        }
+        onParamChange();
+      }
+
+      PULSES_LIST.forEach(({ n, name }, i) => {
+        const li = document.createElement('li');
+        li.innerHTML = `${n}<small>${name}</small>`;
+        if (i === pIdx) li.classList.add('ddactive');
+        li.addEventListener('click', () => { setPulses(i); dd.classList.remove('open'); });
+        dd.appendChild(li);
+      });
+      document.getElementById('pulses-display').addEventListener('click', e => {
+        e.stopPropagation();
+        openDropdown(dd);
+      });
+      document.getElementById('pulses-prev').addEventListener('click', () => setPulses(pIdx - 1));
+      document.getElementById('pulses-next').addEventListener('click', () => setPulses(pIdx + 1));
+    })();
+
+    // ── Pattern dropdown + arrow nav ─────────────
+    (function() {
+      const dd = document.getElementById('pattern-dropdown');
+      SHARED_PATTERNS.forEach((p, i) => {
+        const li = document.createElement('li');
+        const [count, strokes] = p.sub.split(' — ');
+        li.innerHTML = `${count}<small>${strokes}</small>`;
+        if (i === currentPatternIdx) li.classList.add('ddactive');
+        li.addEventListener('click', () => {
+          setPattern(i);
+          dd.classList.remove('open');
+        });
+        dd.appendChild(li);
+      });
+      document.getElementById('pattern-display').addEventListener('click', e => {
+        e.stopPropagation();
+        openDropdown(dd);
+      });
+      document.getElementById('pattern-prev').addEventListener('click', () => stepPattern(-1));
+      document.getElementById('pattern-next').addEventListener('click', () => stepPattern(1));
+    })();
+  </script>
+</body>
+
+</html>
